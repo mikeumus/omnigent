@@ -697,6 +697,16 @@ class CursorExecutor(Executor):
 
         loop = asyncio.get_running_loop()
         cwd = os.path.abspath(self._cwd or os.getcwd())
+        # DIVINCI PATCH: the cursor SDK writes .cursor/hooks.json into cwd and
+        # launches its bridge there, so cwd MUST be writable. When cursor runs
+        # as a DISPATCHED sub-agent, a relative os_env cwd (".") resolves against
+        # a runner whose process cwd is "/", so cwd becomes "/" → the SDK fails
+        # with "[Errno 30] Read-only file system: '/.cursor'". When cwd is not
+        # writable, prefer the runner's real session workspace (correct place for
+        # a coding worker), else HOME (always writable; ~/.cursor already exists).
+        if not os.access(cwd, os.W_OK):
+            _ws = os.environ.get("OMNIGENT_RUNNER_WORKSPACE", "")
+            cwd = _ws if (_ws and os.access(_ws, os.W_OK)) else os.path.expanduser("~")
 
         # Write .cursor/hooks.json for preToolUse policy enforcement.
         # RUNNER_SERVER_URL is inherited by the harness subprocess via
