@@ -3,7 +3,7 @@
 This is our tracked fork of `omnigent-ai/omnigent`, running instead of the
 Homebrew install so our patches survive `brew upgrade`.
 
-- **Branch:** `divinci` (our patches) — based on tag `v0.4.0`.
+- **Branch:** `divinci` (our patches) — based on `upstream/main` at `0.5.0.dev0`.
 - **Remotes:** `origin` = mikeumus/omnigent (backup), `upstream` = omnigent-ai/omnigent.
 - **Runtime:** editable `uv` venv at `.venv/`. The LaunchAgent
   `com.mikeumus.omnigent-stack` runs `.venv/bin/{omni,omnigent}`; `omni`/
@@ -26,7 +26,9 @@ earendil-works/pi#6443 (pi-ai timeout).
 ```sh
 cd ~/Documents/omnigent
 git fetch upstream
-git rebase upstream/main        # replays our 1 divinci commit onto new upstream
+# Cherry-pick only the divinci commits (skip release commits):
+git reset --hard upstream/main
+git cherry-pick 00cc475f 653ee837 95e81565   # resolve conflicts; keep upstream where it already has our change
 uv sync                          # re-resolve deps (may bump versions)
 # restart the stack to pick it up:
 launchctl bootout gui/$(id -u)/com.mikeumus.omnigent-stack
